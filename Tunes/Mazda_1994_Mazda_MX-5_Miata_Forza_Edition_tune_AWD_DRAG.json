@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "exported": "2026-05-31T01:25:09.376Z",
+  "tuneType": "drag",
+  "tuneLabel": "Drag Racing",
+  "car": {
+    "make": "Mazda",
+    "model": "1994 Mazda MX-5 Miata Forza Edition",
+    "class": "850 S2"
+  },
+  "gearCount": 6,
+  "carStats": {
+    "pi": "846",
+    "drivetrain": "AWD",
+    "hp": "1743",
+    "torque": "1542",
+    "weight": "2060",
+    "weightDist": "58",
+    "engine": "8.28",
+    "lateralGs60": "1.16",
+    "lateralGs100": "1.32",
+    "zero60": "6.844",
+    "zero100": "20.137",
+    "topSpeed": "122.5",
+    "mechBalance": ".49",
+    "aeroBalance": ".50",
+    "aeroEfficiency": ".828"
+  },
+  "sliderValues": {
+    "tirePressureF": {
+      "min": 15,
+      "max": 55
+    },
+    "tirePressureR": {
+      "min": 15,
+      "max": 55
+    },
+    "finalDrive": {
+      "min": 2.2,
+      "max": 6.1
+    },
+    "gear1": {
+      "min": 0.4,
+      "max": 6
+    },
+    "gear2": {
+      "min": 0.4,
+      "max": 6
+    },
+    "gear3": {
+      "min": 0.4,
+      "max": 6
+    },
+    "gear4": {
+      "min": 0.4,
+      "max": 6
+    },
+    "gear5": {
+      "min": 0.4,
+      "max": 6
+    },
+    "gear6": {
+      "min": 0.4,
+      "max": 6
+    },
+    "gear7": {
+      "min": 0.4,
+      "max": 6
+    },
+    "gear8": {
+      "min": 0.4,
+      "max": 6
+    },
+    "gear9": {
+      "min": 0.4,
+      "max": 6
+    },
+    "gear10": {
+      "min": 0.4,
+      "max": 6
+    },
+    "camberF": {
+      "min": -5,
+      "max": 5
+    },
+    "camberR": {
+      "min": -5,
+      "max": 5
+    },
+    "toeF": {
+      "min": -5,
+      "max": 5
+    },
+    "toeR": {
+      "min": -5,
+      "max": 5
+    },
+    "caster": {
+      "min": 1,
+      "max": 7
+    },
+    "arbF": {
+      "min": 1,
+      "max": 65
+    },
+    "arbR": {
+      "min": 1,
+      "max": 65
+    },
+    "springsF": {
+      "min": 106,
+      "max": 533
+    },
+    "springsR": {
+      "min": 200,
+      "max": 533
+    },
+    "rideHeightF": {
+      "min": 6.4,
+      "max": 7.9
+    },
+    "rideHeightR": {
+      "min": 6,
+      "max": 7.7
+    },
+    "reboundF": {
+      "min": 1,
+      "max": 20
+    },
+    "reboundR": {
+      "min": 1,
+      "max": 20
+    },
+    "bumpF": {
+      "min": 1,
+      "max": 20
+    },
+    "bumpR": {
+      "min": 1,
+      "max": 20
+    },
+    "downforceF": {
+      "min": 64,
+      "max": 191
+    },
+    "downforceR": {
+      "min": 38,
+      "max": 166
+    },
+    "brakeBalance": {
+      "min": 0,
+      "max": 100
+    },
+    "brakePressure": {
+      "min": 0,
+      "max": 200
+    },
+    "diffAccelF": {
+      "min": 0,
+      "max": 100
+    },
+    "centerBalance": {
+      "min": 0,
+      "max": 100
+    },
+    "diffAccelR": {
+      "min": 0,
+      "max": 100
+    },
+    "diffDecelF": {
+      "min": 0,
+      "max": 100
+    },
+    "diffDecelR": {
+      "min": 0,
+      "max": 100
+    }
+  }
+}

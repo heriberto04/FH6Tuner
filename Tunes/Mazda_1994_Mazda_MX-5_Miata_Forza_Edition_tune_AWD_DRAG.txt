@@ -1,0 +1,60 @@
+=== Forza Horizon 6 Tuning App - Tune Export ===
+Date: 5/30/2026
+Tune Type: Drag Racing
+Car: Mazda 1994 Mazda MX-5 Miata Forza Edition (850 S2)
+
+--- Car Stats ---
+PI Rating: 846
+Drivetrain: AWD
+Horsepower: 1743
+Torque: 1542
+Weight: 2060
+Weight Dist (F/R): 58
+Engine Displacement: 8.28
+Lateral Gs (60 mph): 1.16
+Lateral Gs (100 mph): 1.32
+0-60 mph: 6.844
+0-100 mph: 20.137
+Top Speed: 122.5
+Mech. Balance: .49
+Aero Balance: .50
+Aero Efficiency: .828
+
+--- Tuning Parameters (Range Selected) ---
+Tire Pressure (Front): Range [15PSI - 55PSI] → Recommended: 47.78PSI (Score: 58/100)
+Tire Pressure (Rear): Range [15PSI - 55PSI] → Recommended: 18.25PSI (Score: 49/100)
+Final Drive Ratio: Range [2.2 - 6.1] → Recommended: 5.68 (Score: 52/100)
+1st Gear: Range [0.4 - 6] → Recommended: 3.99 (Score: 73/100)
+2nd Gear: Range [0.4 - 6] → Recommended: 2.41 (Score: 73/100)
+3rd Gear: Range [0.4 - 6] → Recommended: 1.72 (Score: 63/100)
+4th Gear: Range [0.4 - 6] → Recommended: 1.28 (Score: 56/100)
+5th Gear: Range [0.4 - 6] → Recommended: 0.98 (Score: 51/100)
+6th Gear: Range [0.4 - 6] → Recommended: 0.79 (Score: 48/100)
+Camber (Front): Range [-5° - 5°] → Recommended: -1.09° (Score: 76/100)
+Camber (Rear): Range [-5° - 5°] → Recommended: 0.19° (Score: 83/100)
+Toe (Front): Range [-5° - 5°] → Recommended: 0.05° (Score: 85/100)
+Toe (Rear): Range [-5° - 5°] → Recommended: 0° (Score: 85/100)
+Caster Angle: Range [1° - 7°] → Recommended: 6.96° (Score: 43/100)
+Anti-Roll Bar (Front): Range [1 - 65] → Recommended: 52.75 (Score: 59/100)
+Anti-Roll Bar (Rear): Range [1 - 65] → Recommended: 47.82 (Score: 65/100)
+Spring Stiffness (Front): Range [106lb/in - 533lb/in] → Recommended: 165.02lb/in (Score: 94/100)
+Spring Stiffness (Rear): Range [200lb/in - 533lb/in] → Recommended: 242.67lb/in (Score: 96/100)
+Ride Height (Front): Range [6.4in - 7.9in] → Recommended: 6.83in (Score: 56/100)
+Ride Height (Rear): Range [6in - 7.7in] → Recommended: 6.94in (Score: 84/100)
+Rebound (Front): Range [1 - 20] → Recommended: 6.07 (Score: 65/100)
+Rebound (Rear): Range [1 - 20] → Recommended: 15.92 (Score: 61/100)
+Bump (Front): Range [1 - 20] → Recommended: 15.92 (Score: 61/100)
+Bump (Rear): Range [1 - 20] → Recommended: 4.1 (Score: 56/100)
+Front Downforce: Range [64 - 191] → Recommended: 97.14 (Score: 80/100)
+Rear Downforce: Range [38 - 166] → Recommended: 73.3 (Score: 77/100)
+Brake Balance: Range [0%F - 100%F] → Recommended: 50%F (Score: 85/100)
+Brake Pressure: Range [0% - 200%] → Recommended: 100% (Score: 85/100)
+Diff Accel (Front): Range [0% - 100%] → Recommended: 94.48% (Score: 47/100)
+Center Balance: Range [0% - 100%] → Recommended: 50% (Score: 85/100)
+Diff Accel (Rear): Range [0% - 100%] → Recommended: 99.48% (Score: 43/100)
+Diff Decel (Front): Range [0% - 100%] → Recommended: 0.74% (Score: 43/100)
+Diff Decel (Rear): Range [0% - 100%] → Recommended: 0.74% (Score: 43/100)
+
+Transmission: 6-Speed
+
+Overall Score: 66/100

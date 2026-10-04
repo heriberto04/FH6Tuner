@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forza Horizon 6 Tuning App</title>
+<script src="cars.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--surface:#13131f;--card:#1a1a2e;--border:#2a2a4a;--primary:#6c5ce7;--primary-glow:#8b7cf7;--accent:#00d4ff;--success:#00e676;--warning:#ffab00;--danger:#ff1744;--text:#e8e8f0;--text-muted:#8888aa;--radius:12px}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.hidden{display:none!important}
+.container{max-width:1200px;margin:0 auto;padding:20px}
+header{background:linear-gradient(135deg,var(--surface),#1a1a3e);border-bottom:2px solid var(--primary);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:8px}
+header h1{font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header .subtitle{font-size:12px;color:var(--text-muted);-webkit-text-fill-color:var(--text-muted)}
+.step-indicator{display:flex;gap:8px;align-items:center}
+.step-dot{width:10px;height:10px;border-radius:50%;background:var(--border);transition:.3s}
+.step-dot.active{background:var(--primary);box-shadow:0 0 8px var(--primary-glow)}
+.step-dot.done{background:var(--success)}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.section h2{font-size:18px;font-weight:700;color:var(--primary);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.section h2 .badge{font-size:11px;padding:2px 10px;border-radius:20px;background:var(--primary);color:#fff;font-weight:600}
+.section>p{margin-bottom:16px}
+.grid{display:grid;gap:12px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:1fr 1fr 1fr}
+.grid-4{grid-template-columns:1fr 1fr 1fr 1fr}
+@media(max-width:768px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+
+.tune-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tune-card{background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center;cursor:pointer;transition:.3s}
+.tune-card:hover{border-color:var(--primary);transform:translateY(-2px)}
+.tune-card.selected{border-color:var(--primary);background:linear-gradient(135deg,rgba(108,92,231,0.15),rgba(0,212,255,0.1));box-shadow:0 0 15px rgba(108,92,231,0.2)}
+.tune-card .icon{font-size:32px;margin-bottom:8px}
+.tune-card .name{font-weight:700;font-size:13px;margin-bottom:4px}
+.tune-card .desc{font-size:11px;color:var(--text-muted);line-height:1.3}
+
+.search-box{position:relative;margin-bottom:12px}
+.search-box input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:14px;outline:none;transition:.3s}
+.search-box input:focus{border-color:var(--primary)}
+.search-box input::placeholder{color:var(--text-muted)}
+.car-list{max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.car-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:.1s;font-size:13px}
+.car-item:last-child{border-bottom:none}
+.car-item:hover{background:rgba(108,92,231,0.15)}
+.car-item.selected{background:rgba(108,92,231,0.25);border-left:3px solid var(--primary)}
+.car-item .car-make{color:var(--text-muted);font-size:11px}
+.car-item .car-class{float:right;font-size:11px;padding:1px 8px;border-radius:4px;background:var(--border)}
+.car-count{font-size:12px;color:var(--text-muted);margin-top:6px}
+
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:13px;outline:none;transition:.3s}
+.form-group input:focus,.form-group select:focus{border-color:var(--primary)}
+
+.slider-group{margin-bottom:6px;padding:8px 10px;background:var(--card);border-radius:6px;border:1px solid var(--border)}
+.slider-header .param-name{font-size:12px;font-weight:600}
+
+.range-inputs{display:flex;gap:8px}
+.range-display{display:flex;align-items:center;gap:6px;padding:3px 5px;min-height:30px}
+.range-label{flex:1;display:flex;flex-direction:column;gap:3px;font-size:10px;color:var(--text-muted)}
+.range-inp{width:100%;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-size:12px;box-sizing:border-box;min-width:0;-moz-appearance:textfield}
+.range-inp::-webkit-outer-spin-button,.range-inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.range-inp:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px rgba(108,92,231,0.2)}
+.gear-selector{background:var(--card);border-radius:6px;padding:8px 10px;margin-bottom:8px;border:1px solid var(--border)}
+.gear-btns{display:flex;flex-wrap:wrap;gap:4px}
+.gear-btn{flex:1;min-width:60px;text-align:center;padding:4px 6px;font-size:11px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:4px;cursor:pointer;transition:.2s}
+.gear-btn:hover{border-color:var(--primary)}
+.gear-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.feedback-section{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:16px}
+.behavior-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;transition:.2s}
+.behavior-btn:hover{border-color:var(--primary);background:rgba(108,92,231,0.1)}
+.behavior-btn.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
+#tuningSliders{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+
+.btn{padding:10px 24px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:.3s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-glow);transform:translateY(-1px)}
+.btn-accent{background:var(--accent);color:#000}
+.btn-accent:hover{opacity:.9;transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--primary)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+.results-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:768px){.results-grid{grid-template-columns:1fr 1fr}}
+.result-card{background:var(--card);border-radius:8px;padding:12px;border:1px solid var(--border)}
+.result-card h3{font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.result-card .value{font-size:22px;font-weight:800}
+.result-card .value.high{color:var(--success)}
+.result-card .value.mid{color:var(--warning)}
+.result-card .value.low{color:var(--danger)}
+.overall-score{text-align:center;padding:24px;background:linear-gradient(135deg,rgba(108,92,231,0.1),rgba(0,212,255,0.05));border:2px solid var(--primary);border-radius:var(--radius);margin-bottom:16px}
+.overall-score .score-number{font-size:56px;font-weight:900;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.overall-score .score-label{font-size:14px;color:var(--text-muted);margin-top:4px}
+.overall-score .score-detail{font-size:12px;color:var(--text-muted);margin-top:8px}
+
+.fetch-area{border:1px dashed var(--border);border-radius:8px;padding:16px;text-align:center;margin-bottom:12px}
+.fetch-area .hint{font-size:12px;color:var(--text-muted);margin-top:8px}
+
+.tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--card);border-radius:8px;padding:4px;overflow-x:auto}
+.tab{padding:8px 16px;border:none;border-radius:6px;background:transparent;color:var(--text-muted);font-size:13px;cursor:pointer;transition:.3s;white-space:nowrap;font-weight:600}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--primary);color:#fff}
+
+.loading{text-align:center;padding:40px}
+.loading .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--primary)}
+
+.notification{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;font-weight:600;z-index:1000;animation:slideIn .3s}
+@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.notification.success{background:var(--success);color:#000}
+.notification.error{background:var(--danger);color:#fff}
+
+#carInfo{background:var(--card);border-radius:8px;padding:12px 16px;margin-bottom:12px;border:1px solid var(--border)}
+#carInfo .car-title{font-size:15px;font-weight:700}
+#carInfo .car-details{font-size:12px;color:var(--text-muted);margin-top:4px}
+</style>
+</head>
+<body>
+<header>
+<div><h1 style="font-size:18px">Forza Horizon 6 Tuning App</h1><span class="subtitle">Intelligent tune builder & analysis tool — Beta</span></div>
+<div style="display:flex;align-items:center;gap:8px">
+<button class="btn btn-sm btn-outline" id="btnImportTune" style="font-size:11px">Import Tune</button>
+<input type="file" id="importFileInput" accept=".json" style="display:none">
+<div id="tuneTypeBadge" class="hidden" style="font-size:13px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--card);border:1px solid var(--border);white-space:nowrap"></div>
+<div class="step-indicator" id="stepDots">
+<span class="step-dot active" data-step="0"></span>
+<span class="step-dot" data-step="1"></span>
+<span class="step-dot" data-step="2"></span>
+<span class="step-dot" data-step="3"></span>
+<span class="step-dot" data-step="4"></span>
+</div>
+</div>
+</header>
+
+<div class="container">
+<!-- Step 0: Tune Type Selection -->
+<div id="step0" class="section">
+<h2>Select Tune Type <span class="badge">Step 1</span></h2>
+<p>Choose the type of tune you want to build. Each tune type optimizes different vehicle parameters for specific driving conditions.</p>
+<div class="tune-grid" id="tuneTypeGrid"></div>
+<div class="btn-group"><button class="btn btn-primary" id="btnStep0Next" disabled>Next: Select Car</button></div>
+</div>
+
+<!-- Step 1: Car Selection -->
+<div id="step1" class="section hidden">
+<h2>Select Car <span class="badge">Step 2</span></h2>
+<div class="search-box"><input type="text" id="carSearch" placeholder="Search by make, model, or class..."></div>
+<div id="carInfo" class="hidden"></div>
+<div class="car-list" id="carList"></div>
+<div class="car-count" id="carCount"></div>
+<div style="margin-top:12px">
+<button class="btn btn-sm btn-outline" id="btnCustomCar">+ Add Custom Car</button>
+</div>
+<div class="btn-group">
+<button class="btn btn-outline" id="btnStep1Back">Back</button>
+<button class="btn btn-primary" id="btnStep1Next" disabled>Next: Car Stats</button>
+</div>
+</div>
+
+<!-- Step 2: Car Stats -->
+<div id="step2" class="section hidden">
+<h2>Car Stats <span class="badge">Step 3</span></h2>
+<div id="stockStatsPanel">
+<p>Enter your car's specifications. Pre-filled defaults are shown where available.</p>
+<div class="grid grid-3" id="stockStatsFields"></div>
+</div>
+<div class="btn-group">
+<button class="btn btn-outline" id="btnStep2Back">Back</button>
+<button class="btn btn-primary" id="btnStep2Next">Next: Tuning Parameters</button>
+</div>
+</div>
+
+<!-- Step 3: Tuning Sliders -->
+<div id="step3" class="section hidden">
+<h2>Tuning Parameters <span class="badge">Step 4</span></h2>
+<p>Adjust each parameter with the sliders. The <span style="color:var(--accent)">recommended value</span> for your tune type is shown alongside your current setting. Each slider is scored in real-time.</p>
+<div class="gear-selector">
+  <label style="font-weight:600;margin-bottom:4px;display:block;font-size:12px">Transmission:</label>
+  <div class="gear-btns" id="gearBtns">
+    <button class="gear-btn" data-gear="1">Electric (1)</button>
+    <button class="gear-btn" data-gear="4">4-Speed</button>
+    <button class="gear-btn" data-gear="5">5-Speed</button>
+    <button class="gear-btn active" data-gear="6">6-Speed</button>
+    <button class="gear-btn" data-gear="7">7-Speed</button>
+    <button class="gear-btn" data-gear="8">8-Speed</button>
+    <button class="gear-btn" data-gear="9">9-Speed</button>
+    <button class="gear-btn" data-gear="10">10-Speed</button>
+  </div>
+</div>
+<div id="tuningSliders"></div>
+<div class="btn-group">
+<button class="btn btn-outline" id="btnStep3Back">Back</button>
+<button class="btn btn-primary" id="btnStep3Next">Analyze</button>
+<button class="btn btn-outline" id="btnResetSliders">Reset to Defaults</button>
+</div>
+</div>
+
+<!-- Step 4: Results -->
+<div id="step4" class="section hidden">
+<h2>Tuning Analysis Results <span class="badge">Step 5</span></h2>
+<div class="section" style="padding:16px">
+<h2 style="font-size:14px">Full Parameter Report</h2>
+<div id="resultsTable"></div>
+</div>
+<div class="results-grid" id="resultsGrid"></div>
+<div class="overall-score" id="overallScore">
+<div class="score-number" id="scoreNumber">0</div>
+<div class="score-label">Overall Tune Score</div>
+<div class="score-detail" id="scoreDetail"></div>
+</div>
+<div class="feedback-section" style="padding:16px">
+<h3 style="font-size:14px;margin-bottom:12px">Feedback</h3>
+<label style="font-weight:600;display:block;margin-bottom:6px">What score do you give this tune?</label>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+<input type="number" id="userRating" min="0" max="100" step="1" placeholder="0-100" style="width:80px;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:14px">
+<button class="btn btn-sm btn-primary" id="btnSubmitRating">Submit Rating</button>
+<span id="ratingFeedback" style="font-size:12px;color:var(--text-muted)"></span>
+</div>
+<label style="font-weight:600;display:block;margin-bottom:8px">How did the car behave?</label>
+<div id="behaviorBtns" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+<button class="btn btn-primary" id="btnAnalyzeFeedback">Analyze Again with Feedback</button>
+<div id="learningIndicator" style="font-size:11px;color:var(--accent);margin-top:8px"></div>
+<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+<button class="btn btn-sm btn-outline" id="btnExportLearning" style="font-size:10px">Export Learning Data</button>
+<button class="btn btn-sm btn-outline" id="btnImportLearning" style="font-size:10px">Import Learning Data</button>
+<input type="file" id="importLearningInput" accept=".json" style="display:none">
+</div>
+<p style="font-size:10px;color:var(--text-muted);margin-top:6px">Learning data is stored in <span id="storageLocation">your browser's localStorage</span>. Export it to keep a backup. <a href="#" id="btnResetLearning" style="color:var(--danger)">Reset learning data</a></p>
+</div>
+<div class="btn-group">
+<button class="btn btn-outline" id="btnStep4Back">Back to Tuning</button>
+<button class="btn btn-primary" id="btnExportTune">Export Tune Settings</button>
+<button class="btn btn-outline" id="btnNewTune">Start New Tune</button>
+</div>
+</div>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:center;padding:32px 0 48px">
+<img src="res/FH6_Grueso.png" style="height:60px;width:auto">
+</div>
+
+<!-- Custom Car Modal -->
+<div id="customCarModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center">
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:90%;max-width:400px">
+<h3 style="margin-bottom:16px">Add Custom Car</h3>
+<div class="form-group"><label>Make</label><input type="text" id="customMake" placeholder="e.g. Nissan"></div>
+<div class="form-group"><label>Model</label><input type="text" id="customModel" placeholder="e.g. 2024 GT-R Nismo"></div>
+<div class="form-group"><label>PI Class</label><select id="customClass"><option value="D">D</option><option value="C">C</option><option value="B">B</option><option value="A">A</option><option value="S1">S1</option><option value="S2">S2</option><option value="R">R</option><option value="X">X</option></select></div>
+<div class="form-group"><label>Car Type</label><input type="text" id="customType" placeholder="e.g. Modern Supercars"></div>
+<div class="btn-group">
+<button class="btn btn-sm btn-primary" id="btnCustomSave">Save</button>
+<button class="btn btn-sm btn-outline" id="btnCustomCancel">Cancel</button>
+</div>
+</div>
+</div>
+
+<script>
+// ============ STATE ============
+const state = {
+  step: 0,
+  tuneType: null,
+  selectedCar: null,
+  customCars: [],
+  stockStats: {},
+  sliderValues: {},
+  gearCount: 6,
+  cumulativeBehaviorAdj: {}
+};
+
+// ============ TUNE TYPE PROFILES ============
+const TUNE_TYPES = [
+  { id:'maxspeed', name:'Max Speed', icon:'🚀', desc:'Maximum top speed for straight-line performance. Minimizes drag and rolling resistance.', color:'#ff6b6b' },
+  { id:'drag', name:'Drag Racing', icon:'⚡', desc:'Optimized for quarter-mile drag strips. Maximizes launch and acceleration.', color:'#ffab00' },
+  { id:'circuit', name:'Circuit Racing', icon:'🏎️', desc:'Balanced for closed-circuit racing. Good cornering with strong exit speed.', color:'#6c5ce7' },
+  { id:'allaround', name:'All-Around', icon:'⭐', desc:'Versatile tune for mixed driving conditions. Balanced for street and track.', color:'#00d4ff' },
+  { id:'grip', name:'Grip', icon:'🔄', desc:'Maximum cornering grip. Optimized for high-speed turns and track days.', color:'#00e676' },
+  { id:'rally', name:'Rally', icon:'🏔️', desc:'Tuned for gravel and dirt roads. Compliant suspension with good traction.', color:'#a66cff' },
+  { id:'offroad', name:'Off-Road', icon:'🛞', desc:'Built for rough terrain and off-road trails. Maximum suspension travel.', color:'#ff8a65' },
+  { id:'drift', name:'Drift', icon:'💨', desc:'Optimized for sustained slides and car control. Soft front, stiff rear, maximum steering angle.', color:'#ff4081' }
+];
+
+// ============ TUNING PARAMETERS & TUNE PROFILES ============
+const PARAMS = [
+  { id:'tirePressureF', name:'Tire Pressure (Front)', unit:'PSI', min:15, max:55, step:0.5, category:'Tires' },
+  { id:'tirePressureR', name:'Tire Pressure (Rear)', unit:'PSI', min:15, max:55, step:0.5, category:'Tires' },
+  { id:'finalDrive', name:'Final Drive Ratio', unit:'', min:2.20, max:6.10, step:0.01, category:'Gearing' },
+  { id:'gear1', name:'1st Gear', unit:'', min:0.40, max:6.00, step:0.01, category:'Gearing' },
+  { id:'gear2', name:'2nd Gear', unit:'', min:0.40, max:6.00, step:0.01, category:'Gearing' },
+  { id:'gear3', name:'3rd Gear', unit:'', min:0.40, max:6.00, step:0.01, category:'Gearing' },
+  { id:'gear4', name:'4th Gear', unit:'', min:0.40, max:6.00, step:0.01, category:'Gearing' },
+  { id:'gear5', name:'5th Gear', unit:'', min:0.40, max:6.00, step:0.01, category:'Gearing' },
+  { id:'gear6', name:'6th Gear', unit:'', min:0.40, max:6.00, step:0.01, category:'Gearing' },
+  { id:'gear7', name:'7th Gear', unit:'', min:0.40, max:6.00, step:0.01, category:'Gearing' },
+  { id:'gear8', name:'8th Gear', unit:'', min:0.40, max:6.00, step:0.01, category:'Gearing' },
+  { id:'gear9', name:'9th Gear', unit:'', min:0.40, max:6.00, step:0.01, category:'Gearing' },
+  { id:'gear10', name:'10th Gear', unit:'', min:0.40, max:6.00, step:0.01, category:'Gearing' },
+  { id:'camberF', name:'Camber (Front)', unit:'°', min:-5, max:5, step:0.1, category:'Alignment' },
+  { id:'camberR', name:'Camber (Rear)', unit:'°', min:-5, max:5, step:0.1, category:'Alignment' },
+  { id:'toeF', name:'Toe (Front)', unit:'°', min:-5, max:5, step:0.05, category:'Alignment' },
+  { id:'toeR', name:'Toe (Rear)', unit:'°', min:-5, max:5, step:0.05, category:'Alignment' },
+  { id:'caster', name:'Caster Angle', unit:'°', min:1, max:7, step:0.1, category:'Alignment' },
+  { id:'arbF', name:'Anti-Roll Bar (Front)', unit:'', min:1, max:65, step:0.5, category:'Antiroll Bars' },
+  { id:'arbR', name:'Anti-Roll Bar (Rear)', unit:'', min:1, max:65, step:0.5, category:'Antiroll Bars' },
+  { id:'springsF', name:'Spring Stiffness (Front)', unit:'lb/in', min:100, max:2000, step:10, category:'Springs' },
+  { id:'springsR', name:'Spring Stiffness (Rear)', unit:'lb/in', min:100, max:2000, step:10, category:'Springs' },
+  { id:'rideHeightF', name:'Ride Height (Front)', unit:'in', min:0, max:10, step:0.1, category:'Springs' },
+  { id:'rideHeightR', name:'Ride Height (Rear)', unit:'in', min:0, max:10, step:0.1, category:'Springs' },
+  { id:'reboundF', name:'Rebound (Front)', unit:'', min:1, max:20, step:1, category:'Damping' },
+  { id:'reboundR', name:'Rebound (Rear)', unit:'', min:1, max:20, step:1, category:'Damping' },
+  { id:'bumpF', name:'Bump (Front)', unit:'', min:1, max:20, step:1, category:'Damping' },
+  { id:'bumpR', name:'Bump (Rear)', unit:'', min:1, max:20, step:1, category:'Damping' },
+  { id:'downforceF', name:'Front Downforce', unit:'', min:0, max:2000, step:10, category:'Aero' },
+  { id:'downforceR', name:'Rear Downforce', unit:'', min:0, max:2000, step:10, category:'Aero' },
+  { id:'brakeBalance', name:'Brake Balance', unit:'%F', min:0, max:100, step:1, category:'Brake' },
+  { id:'brakePressure', name:'Brake Pressure', unit:'%', min:0, max:200, step:1, category:'Brake' },
+  { id:'diffAccelF', name:'Diff Accel (Front)', unit:'%', min:0, max:100, step:5, category:'Differential' },
+  { id:'centerBalance', name:'Center Balance', unit:'%', min:0, max:100, step:1, category:'Differential' },
+  { id:'diffAccelR', name:'Diff Accel (Rear)', unit:'%', min:0, max:100, step:5, category:'Differential' },
+  { id:'diffDecelF', name:'Diff Decel (Front)', unit:'%', min:0, max:100, step:5, category:'Differential' },
+  { id:'diffDecelR', name:'Diff Decel (Rear)', unit:'%', min:0, max:100, step:5, category:'Differential' }
+];
+
+// Each tune type's ideal values and importance weights (1-10)
+const TUNE_PROFILES = {
+  maxspeed: {
+    label:'Max Speed', desc:'Minimize drag. Low downforce, stiff suspension, high tire pressure.',
+    vals:{ tirePressureF:42, tirePressureR:42, finalDrive:3.20, gear1:2.80, gear2:1.80, gear3:1.30, gear4:0.95, gear5:0.72, gear6:0.55, gear7:0.45, gear8:0.38, gear9:0.32, gear10:0.28, camberF:-0.5, camberR:-0.3, toeF:0.1, toeR:0.15, caster:5.5, rideHeightF:2.5, rideHeightR:2.8, springsF:1050, springsR:980, reboundF:10, reboundR:10, bumpF:5.5, bumpR:5.5, arbF:25, arbR:28, downforceF:150, downforceR:150, brakeBalance:52, brakePressure:125, diffAccelF:25, centerBalance:35, diffAccelR:35, diffDecelF:15, diffDecelR:20 },
+    weights:{ tirePressureF:7, tirePressureR:7, finalDrive:8, gear1:7, gear2:7, gear3:7, gear4:7, gear5:7, gear6:7, gear7:7, gear8:7, gear9:7, gear10:7, camberF:5, camberR:4, toeF:5, toeR:5, caster:3, rideHeightF:8, rideHeightR:7, springsF:6, springsR:5, reboundF:4, reboundR:4, bumpF:4, bumpR:4, arbF:5, arbR:4, downforceF:9, downforceR:9, brakeBalance:3, brakePressure:4, diffAccelF:5, centerBalance:5, diffAccelR:6, diffDecelF:3, diffDecelR:3 }
+  },
+  drag: {
+    label:'Drag Racing', desc:'Maximum launch. Stiff suspension, minimal aero, full-lock differential.',
+    vals:{ tirePressureF:50, tirePressureR:18, finalDrive:5.50, gear1:4.00, gear2:2.40, gear3:1.70, gear4:1.25, gear5:0.95, gear6:0.75, gear7:0.60, gear8:0.50, gear9:0.42, gear10:0.36, camberF:-0.5, camberR:0.5, toeF:0, toeR:0, caster:6.5, rideHeightF:3.0, rideHeightR:5.5, springsF:300, springsR:280, reboundF:6, reboundR:16, bumpF:16, bumpR:4, arbF:50, arbR:45, downforceF:0, downforceR:0, brakeBalance:50, brakePressure:100, diffAccelF:85, centerBalance:50, diffAccelR:85, diffDecelF:0, diffDecelR:0 },
+    weights:{ tirePressureF:8, tirePressureR:8, finalDrive:9, gear1:9, gear2:9, gear3:9, gear4:9, gear5:9, gear6:9, gear7:9, gear8:9, gear9:9, gear10:9, camberF:6, camberR:5, toeF:6, toeR:5, caster:4, rideHeightF:9, rideHeightR:8, springsF:7, springsR:6, reboundF:5, reboundR:5, bumpF:5, bumpR:5, arbF:6, arbR:5, downforceF:10, downforceR:10, brakeBalance:6, brakePressure:4, diffAccelF:9, centerBalance:8, diffAccelR:10, diffDecelF:5, diffDecelR:5 }
+  },
+  circuit: {
+    label:'Circuit Racing', desc:'Balanced performance. Good downforce, neutral handling, responsive turn-in.',
+    vals:{ tirePressureF:30, tirePressureR:30, finalDrive:3.80, gear1:3.30, gear2:2.10, gear3:1.50, gear4:1.10, gear5:0.82, gear6:0.62, gear7:0.50, gear8:0.42, gear9:0.36, gear10:0.32, camberF:-2.0, camberR:-1.0, toeF:-0.1, toeR:0.2, caster:6.0, rideHeightF:3.2, rideHeightR:3.5, springsF:840, springsR:770, reboundF:9, reboundR:9, bumpF:5, bumpR:5, arbF:22, arbR:28, downforceF:750, downforceR:750, brakeBalance:52, brakePressure:125, diffAccelF:55, centerBalance:55, diffAccelR:60, diffDecelF:35, diffDecelR:40 },
+    weights:{ tirePressureF:6, tirePressureR:6, finalDrive:7, gear1:7, gear2:7, gear3:7, gear4:7, gear5:7, gear6:7, gear7:7, gear8:7, gear9:7, gear10:7, camberF:7, camberR:6, toeF:7, toeR:6, caster:5, rideHeightF:7, rideHeightR:6, springsF:7, springsR:6, reboundF:6, reboundR:6, bumpF:6, bumpR:6, arbF:7, arbR:6, downforceF:8, downforceR:8, brakeBalance:5, brakePressure:5, diffAccelF:6, centerBalance:6, diffAccelR:7, diffDecelF:5, diffDecelR:5 }
+  },
+  allaround: {
+    label:'All-Around', desc:'Versatile daily-driver tune. Conservative settings for mixed conditions.',
+    vals:{ tirePressureF:33, tirePressureR:33, finalDrive:3.50, gear1:3.40, gear2:2.20, gear3:1.55, gear4:1.10, gear5:0.82, gear6:0.62, gear7:0.50, gear8:0.42, gear9:0.36, gear10:0.32, camberF:-1.7, camberR:-1.2, toeF:0, toeR:0.1, caster:5.5, rideHeightF:3.8, rideHeightR:4.0, springsF:700, springsR:630, reboundF:7, reboundR:7, bumpF:4, bumpR:4, arbF:18, arbR:25, downforceF:450, downforceR:500, brakeBalance:50, brakePressure:125, diffAccelF:40, centerBalance:50, diffAccelR:50, diffDecelF:25, diffDecelR:30 },
+    weights:{ tirePressureF:5, tirePressureR:5, finalDrive:4, gear1:5, gear2:5, gear3:5, gear4:5, gear5:5, gear6:5, gear7:5, gear8:5, gear9:5, gear10:5, camberF:5, camberR:4, toeF:4, toeR:4, caster:3, rideHeightF:5, rideHeightR:4, springsF:5, springsR:4, reboundF:4, reboundR:4, bumpF:4, bumpR:4, arbF:4, arbR:4, downforceF:5, downforceR:5, brakeBalance:4, brakePressure:4, diffAccelF:4, centerBalance:4, diffAccelR:5, diffDecelF:3, diffDecelR:3 }
+  },
+  grip: {
+    label:'Maximum Grip', desc:'Maximum cornering grip. High downforce, stiff ARBs, aggressive camber.',
+    vals:{ tirePressureF:26, tirePressureR:26, finalDrive:3.60, gear1:3.50, gear2:2.30, gear3:1.60, gear4:1.20, gear5:0.90, gear6:0.70, gear7:0.55, gear8:0.45, gear9:0.38, gear10:0.34, camberF:-2.5, camberR:-1.5, toeF:-0.2, toeR:0.3, caster:6.0, rideHeightF:2.8, rideHeightR:3.2, springsF:1050, springsR:980, reboundF:11, reboundR:10, bumpF:6, bumpR:5.5, arbF:30, arbR:28, downforceF:950, downforceR:950, brakeBalance:52, brakePressure:145, diffAccelF:60, centerBalance:55, diffAccelR:80, diffDecelF:45, diffDecelR:55 },
+    weights:{ tirePressureF:8, tirePressureR:8, finalDrive:7, gear1:8, gear2:8, gear3:8, gear4:8, gear5:8, gear6:8, gear7:8, gear8:8, gear9:8, gear10:8, camberF:9, camberR:8, toeF:8, toeR:7, caster:6, rideHeightF:7, rideHeightR:6, springsF:7, springsR:6, reboundF:7, reboundR:7, bumpF:6, bumpR:6, arbF:8, arbR:7, downforceF:9, downforceR:9, brakeBalance:5, brakePressure:6, diffAccelF:7, centerBalance:7, diffAccelR:8, diffDecelF:6, diffDecelR:6 }
+  },
+  rally: {
+    label:'Rally', desc:'Gravel and dirt optimized. Soft suspension, high ride height, limited-slip diff.',
+    vals:{ tirePressureF:26, tirePressureR:27, finalDrive:3.90, gear1:3.70, gear2:2.40, gear3:1.70, gear4:1.25, gear5:0.95, gear6:0.75, gear7:0.60, gear8:0.50, gear9:0.42, gear10:0.36, camberF:-1.5, camberR:-1.0, toeF:0.2, toeR:0.25, caster:5.0, rideHeightF:5.0, rideHeightR:5.5, springsF:490, springsR:420, reboundF:6, reboundR:6, bumpF:3.5, bumpR:3.5, arbF:5, arbR:4, downforceF:600, downforceR:550, brakeBalance:48, brakePressure:125, diffAccelF:65, centerBalance:65, diffAccelR:80, diffDecelF:55, diffDecelR:60 },
+    weights:{ tirePressureF:7, tirePressureR:7, finalDrive:7, gear1:8, gear2:8, gear3:8, gear4:8, gear5:8, gear6:8, gear7:8, gear8:8, gear9:8, gear10:8, camberF:6, camberR:5, toeF:7, toeR:6, caster:4, rideHeightF:8, rideHeightR:8, springsF:8, springsR:7, reboundF:6, reboundR:6, bumpF:6, bumpR:6, arbF:7, arbR:6, downforceF:6, downforceR:6, brakeBalance:5, brakePressure:5, diffAccelF:7, centerBalance:7, diffAccelR:8, diffDecelF:6, diffDecelR:6 }
+  },
+  offroad: {
+    label:'Off-Road', desc:'Extreme terrain. Maximum ride height, very soft suspension, low tire pressure.',
+    vals:{ tirePressureF:18, tirePressureR:19, finalDrive:4.20, gear1:3.90, gear2:2.50, gear3:1.75, gear4:1.30, gear5:1.00, gear6:0.80, gear7:0.65, gear8:0.55, gear9:0.48, gear10:0.42, camberF:-0.5, camberR:-0.5, toeF:0.3, toeR:0.35, caster:4.5, rideHeightF:7.0, rideHeightR:7.5, springsF:350, springsR:280, reboundF:5, reboundR:5, bumpF:3, bumpR:3, arbF:4, arbR:4, downforceF:100, downforceR:100, brakeBalance:48, brakePressure:115, diffAccelF:75, centerBalance:60, diffAccelR:90, diffDecelF:65, diffDecelR:70 },
+    weights:{ tirePressureF:8, tirePressureR:8, finalDrive:7, gear1:9, gear2:9, gear3:9, gear4:9, gear5:9, gear6:9, gear7:9, gear8:9, gear9:9, gear10:9, camberF:4, camberR:4, toeF:6, toeR:6, caster:3, rideHeightF:9, rideHeightR:9, springsF:9, springsR:8, reboundF:5, reboundR:5, bumpF:5, bumpR:5, arbF:7, arbR:6, downforceF:4, downforceR:4, brakeBalance:4, brakePressure:5, diffAccelF:8, centerBalance:8, diffAccelR:8, diffDecelF:7, diffDecelR:7 }
+  },
+  drift: {
+    label:'Drift', desc:'Sustained slides with maximum angle. Soft front ARB, stiff rear, high caster, low downforce.',
+    vals:{ tirePressureF:28, tirePressureR:18, finalDrive:3.80, gear1:3.50, gear2:2.30, gear3:1.65, gear4:1.20, gear5:0.90, gear6:0.70, gear7:0.55, gear8:0.45, gear9:0.38, gear10:0.34, camberF:-5.0, camberR:-1.0, toeF:-1.0, toeR:1.0, caster:6.5, rideHeightF:2.5, rideHeightR:2.8, springsF:490, springsR:490, reboundF:7, reboundR:9, bumpF:4, bumpR:5, arbF:3, arbR:18, downforceF:0, downforceR:100, brakeBalance:42, brakePressure:100, diffAccelF:100, centerBalance:65, diffAccelR:100, diffDecelF:100, diffDecelR:100 },
+    weights:{ tirePressureF:7, tirePressureR:7, finalDrive:8, gear1:7, gear2:7, gear3:7, gear4:7, gear5:7, gear6:7, gear7:7, gear8:7, gear9:7, gear10:7, camberF:9, camberR:7, toeF:8, toeR:7, caster:6, rideHeightF:6, rideHeightR:6, springsF:7, springsR:7, reboundF:5, reboundR:6, bumpF:4, bumpR:5, arbF:7, arbR:8, downforceF:5, downforceR:5, brakeBalance:6, brakePressure:5, diffAccelF:8, centerBalance:7, diffAccelR:8, diffDecelF:6, diffDecelR:6 }
+  }
+};
+
+// ============ CAR-STAT-AWARE PROFILE ADJUSTMENT ============
+function adjustProfileForCar(profile, stats, profileType) {
+  const vals = Object.assign({}, profile.vals);
+  const hp = parseFloat(stats.hp) || 400;
+  const torque = parseFloat(stats.torque) || 350;
+  const weight = parseFloat(stats.weight) || 3200;
+  const weightDist = parseFloat(stats.weightDist) || 52;
+  const drivetrain = stats.drivetrain || 'RWD';
+  const topSpeed = parseFloat(stats.topSpeed) || 180;
+  const mechBalance = parseFloat(stats.mechBalance) || 50;
+  const aeroEfficiency = parseFloat(stats.aeroEfficiency) || 50;
+  const engine = parseFloat(stats.engine) || 3.0;
+  const lateralGs60 = parseFloat(stats.lateralGs60) || 1.0;
+  const lateralGs100 = parseFloat(stats.lateralGs100) || 0.9;
+  const zero60 = parseFloat(stats.zero60) || 4.5;
+  const zero100 = parseFloat(stats.zero100) || 10.5;
+  const aeroBalance = parseFloat(stats.aeroBalance) || 50;
+
+  function clamp(v, pid) {
+    const p = PARAMS.find(x => x.id === pid);
+    return p ? Math.max(p.min, Math.min(p.max, v)) : v;
+  }
+
+  const isAero = profileType === 'grip' || profileType === 'circuit' || profileType === 'rally' || profileType === 'allaround';
+  const isSpeed = profileType === 'maxspeed' || profileType === 'drag';
+  const isSoft = profileType === 'offroad' || profileType === 'rally';
+
+  // --- Drivetrain ---
+  if (drivetrain === 'FWD') {
+    vals.diffAccelR = clamp((vals.diffAccelR||50)-15, 'diffAccelR');
+    vals.diffDecelR = clamp((vals.diffDecelR||30)-10, 'diffDecelR');
+    vals.camberR = clamp((vals.camberR||-1)+0.5, 'camberR');
+    vals.toeR = clamp((vals.toeR||0)+0.1, 'toeR');
+    vals.springsR = clamp((vals.springsR||500)-40, 'springsR');
+    vals.arbR = clamp((vals.arbR||8)-2, 'arbR');
+    vals.centerBalance = clamp(40, 'centerBalance');
+  }
+  if (drivetrain === 'RWD') {
+    vals.diffAccelR = clamp((vals.diffAccelR||50)+5, 'diffAccelR');
+    vals.camberR = clamp((vals.camberR||-1)-0.3, 'camberR');
+    vals.springsR = clamp((vals.springsR||500)+30, 'springsR');
+    vals.arbR = clamp((vals.arbR||8)+1, 'arbR');
+    vals.reboundR = clamp((vals.reboundR||6)+1, 'reboundR');
+    if (!isSpeed) vals.centerBalance = clamp((vals.centerBalance||50)+5, 'centerBalance');
+  }
+  if (drivetrain === 'AWD') {
+    vals.diffAccelF = clamp((vals.diffAccelF||50)+10, 'diffAccelF');
+    vals.diffAccelR = clamp((vals.diffAccelR||50)+5, 'diffAccelR');
+    vals.springsR = clamp((vals.springsR||500)+20, 'springsR');
+    vals.arbR = clamp((vals.arbR||8)+1, 'arbR');
+    vals.toeF = clamp((vals.toeF||0)+0.05, 'toeF');
+    if (isSoft || profileType === 'drift') {
+      vals.centerBalance = clamp(60, 'centerBalance');
+    } else if (isSpeed) {
+      vals.centerBalance = clamp(50, 'centerBalance');
+    } else {
+      vals.centerBalance = clamp(55, 'centerBalance');
+    }
+  }
+
+  // --- Power (HP) ---
+  if (hp > 600) {
+    if (!isSpeed) vals.finalDrive = clamp((vals.finalDrive||3.5)-0.25, 'finalDrive');
+    vals.springsR = clamp((vals.springsR||500)+60, 'springsR');
+    vals.arbR = clamp((vals.arbR||8)+2, 'arbR');
+    vals.tirePressureR = clamp((vals.tirePressureR||30)+2, 'tirePressureR');
+    vals.diffAccelR = clamp((vals.diffAccelR||50)+5, 'diffAccelR');
+  } else if (hp < 300) {
+    if (!isSpeed) vals.finalDrive = clamp((vals.finalDrive||3.5)+0.25, 'finalDrive');
+    vals.springsR = clamp((vals.springsR||500)-40, 'springsR');
+  }
+
+  // --- Torque ---
+  const torqueRatio = torque / Math.max(hp, 1);
+  if (torqueRatio > 1.5) {
+    vals.finalDrive = clamp((vals.finalDrive||3.5)+0.15, 'finalDrive');
+    vals.diffAccelR = clamp((vals.diffAccelR||50)+5, 'diffAccelR');
+    vals.diffDecelR = clamp((vals.diffDecelR||30)+5, 'diffDecelR');
+  } else if (torqueRatio < 0.8 && !isSpeed) {
+    vals.finalDrive = clamp((vals.finalDrive||3.5)-0.1, 'finalDrive');
+  }
+
+  // --- 0-60 / Launch ---
+  if (zero60 < 3.5) {
+    if (!isSpeed) vals.finalDrive = clamp((vals.finalDrive||3.5)+0.1, 'finalDrive');
+  } else if (zero60 > 5.5) {
+    vals.finalDrive = clamp((vals.finalDrive||3.5)-0.15, 'finalDrive');
+    vals.diffAccelR = clamp((vals.diffAccelR||50)+5, 'diffAccelR');
+  }
+  const sixtyToHundredRatio = zero100 / Math.max(zero60, 0.1);
+  if (sixtyToHundredRatio > 3.0) {
+    vals.finalDrive = clamp((vals.finalDrive||3.5)-0.1, 'finalDrive');
+  }
+
+  // --- Lateral Gs ---
+  if (lateralGs60 > 1.15) {
+    if (!isSoft) {
+      vals.camberF = clamp((vals.camberF||-1)-0.3, 'camberF');
+      vals.camberR = clamp((vals.camberR||-1)-0.3, 'camberR');
+      vals.arbF = clamp((vals.arbF||8)+2, 'arbF');
+      vals.arbR = clamp((vals.arbR||8)+2, 'arbR');
+      vals.springsF = clamp((vals.springsF||500)+40, 'springsF');
+      vals.springsR = clamp((vals.springsR||500)+40, 'springsR');
+    }
+    vals.caster = clamp((vals.caster||5)+0.5, 'caster');
+  } else if (lateralGs60 < 0.85) {
+    vals.camberF = clamp((vals.camberF||-1)+0.3, 'camberF');
+    vals.camberR = clamp((vals.camberR||-1)+0.3, 'camberR');
+    vals.arbF = clamp((vals.arbF||8)-2, 'arbF');
+    vals.arbR = clamp((vals.arbR||8)-2, 'arbR');
+    vals.springsF = clamp((vals.springsF||500)-40, 'springsF');
+    vals.springsR = clamp((vals.springsR||500)-40, 'springsR');
+  }
+  const aeroDrop = lateralGs60 > 0 ? (lateralGs60 - lateralGs100) / lateralGs60 : 0;
+  if (aeroDrop > 0.15) {
+    if (isAero) {
+      vals.downforceF = clamp((vals.downforceF||500)+100, 'downforceF');
+      vals.downforceR = clamp((vals.downforceR||500)+100, 'downforceR');
+    }
+  } else if (aeroDrop < 0.05 && !isAero) {
+    vals.downforceF = clamp((vals.downforceF||500)-50, 'downforceF');
+    vals.downforceR = clamp((vals.downforceR||500)-50, 'downforceR');
+  }
+
+  // --- Weight ---
+  if (weight > 3800) {
+    vals.tirePressureF = clamp((vals.tirePressureF||30)+3, 'tirePressureF');
+    vals.tirePressureR = clamp((vals.tirePressureR||30)+3, 'tirePressureR');
+    vals.springsF = clamp((vals.springsF||500)+80, 'springsF');
+    vals.springsR = clamp((vals.springsR||500)+80, 'springsR');
+    vals.arbF = clamp((vals.arbF||8)+2, 'arbF');
+    vals.arbR = clamp((vals.arbR||8)+2, 'arbR');
+  } else if (weight < 2800) {
+    vals.tirePressureF = clamp((vals.tirePressureF||30)-2, 'tirePressureF');
+    vals.tirePressureR = clamp((vals.tirePressureR||30)-2, 'tirePressureR');
+    vals.springsF = clamp((vals.springsF||500)-60, 'springsF');
+    vals.springsR = clamp((vals.springsR||500)-60, 'springsR');
+    vals.arbF = clamp((vals.arbF||8)-2, 'arbF');
+    vals.arbR = clamp((vals.arbR||8)-2, 'arbR');
+  }
+
+  // --- Weight Distribution & Engine Placement ---
+  if (weightDist > 55) {
+    vals.springsF = clamp((vals.springsF||500)+60, 'springsF');
+    vals.arbF = clamp((vals.arbF||8)+2, 'arbF');
+    vals.camberF = clamp((vals.camberF||-1)-0.3, 'camberF');
+    vals.rideHeightF = clamp((vals.rideHeightF||4.0)-0.2, 'rideHeightF');
+  } else if (weightDist < 45) {
+    vals.springsR = clamp((vals.springsR||500)+60, 'springsR');
+    vals.arbR = clamp((vals.arbR||8)+2, 'arbR');
+    vals.camberR = clamp((vals.camberR||-1)-0.3, 'camberR');
+    vals.rideHeightR = clamp((vals.rideHeightR||4.0)-0.2, 'rideHeightR');
+  }
+  if (weightDist < 40 && !isSoft && !isSpeed) {
+    vals.arbF = clamp((vals.arbF||8)-2, 'arbF');
+    vals.springsF = clamp((vals.springsF||500)-40, 'springsF');
+    vals.camberR = clamp((vals.camberR||-1)-0.3, 'camberR');
+    vals.toeR = clamp((vals.toeR||0)+0.1, 'toeR');
+  }
+  if (weightDist > 60 && !isSoft && !isSpeed) {
+    vals.arbR = clamp((vals.arbR||8)-2, 'arbR');
+    vals.springsR = clamp((vals.springsR||500)-40, 'springsR');
+    vals.camberF = clamp((vals.camberF||-1)-0.3, 'camberF');
+    vals.toeF = clamp((vals.toeF||0)-0.1, 'toeF');
+  }
+
+  // --- Top Speed & Aero ---
+  if (topSpeed > 200) {
+    if (isSpeed) {
+      vals.finalDrive = clamp((vals.finalDrive||3.5)-0.3, 'finalDrive');
+    } else if (!isAero) {
+      vals.finalDrive = clamp((vals.finalDrive||3.5)-0.2, 'finalDrive');
+    }
+    vals.downforceF = clamp((vals.downforceF||500) - (isAero ? 50 : 100), 'downforceF');
+    vals.downforceR = clamp((vals.downforceR||500) - (isAero ? 50 : 100), 'downforceR');
+    vals.tirePressureF = clamp((vals.tirePressureF||30)+2, 'tirePressureF');
+    vals.tirePressureR = clamp((vals.tirePressureR||30)+2, 'tirePressureR');
+  } else if (topSpeed < 140) {
+    vals.finalDrive = clamp((vals.finalDrive||3.5)+0.25, 'finalDrive');
+    vals.downforceF = clamp((vals.downforceF||500) + (isAero ? 200 : 150), 'downforceF');
+    vals.downforceR = clamp((vals.downforceR||500) + (isAero ? 150 : 100), 'downforceR');
+  }
+
+  // --- Aero Balance ---
+  if (aeroBalance > 55) {
+    vals.downforceF = clamp((vals.downforceF||500)+50, 'downforceF');
+    vals.downforceR = clamp((vals.downforceR||500)-30, 'downforceR');
+  } else if (aeroBalance < 45) {
+    vals.downforceF = clamp((vals.downforceF||500)-30, 'downforceF');
+    vals.downforceR = clamp((vals.downforceR||500)+50, 'downforceR');
+  }
+
+  // --- Engine Displacement ---
+  if (engine > 5.0) {
+    vals.finalDrive = clamp((vals.finalDrive||3.5)+0.1, 'finalDrive');
+  }
+
+  // --- Mech Balance ---
+  if (mechBalance > 55) {
+    vals.arbR = clamp((vals.arbR||8)+1, 'arbR');
+    vals.springsR = clamp((vals.springsR||500)+20, 'springsR');
+  } else if (mechBalance < 45) {
+    vals.arbF = clamp((vals.arbF||8)+1, 'arbF');
+    vals.springsF = clamp((vals.springsF||500)+20, 'springsF');
+  }
+
+  // --- Aero Efficiency ---
+  if (aeroEfficiency > 60) {
+    vals.downforceF = clamp((vals.downforceF||500)+50, 'downforceF');
+    vals.downforceR = clamp((vals.downforceR||500)+50, 'downforceR');
+  } else if (aeroEfficiency < 40) {
+    vals.downforceF = clamp((vals.downforceF||500)-50, 'downforceF');
+    vals.downforceR = clamp((vals.downforceR||500)-50, 'downforceR');
+  }
+
+  return vals;
+}
+
+// ============ UI LOGIC ============
+function $(id) { return document.getElementById(id); }
+
+function showStep(n) {
+  for (let i = 0; i < 5; i++) {
+    const el = $('step' + i);
+    if (el) el.classList.toggle('hidden', i !== n);
+    const dot = document.querySelector(`.step-dot[data-step="${i}"]`);
+    if (dot) {
+      dot.classList.toggle('active', i === n);
+      dot.classList.toggle('done', i < n);
+    }
+  }
+  state.step = n;
+  const badge = $('tuneTypeBadge');
+  if (badge) badge.classList.toggle('hidden', n === 0);
+}
+
+function notify(msg, type) {
+  const n = document.createElement('div');
+  n.className = 'notification ' + type;
+  n.textContent = msg;
+  document.body.appendChild(n);
+  setTimeout(() => n.remove(), 2500);
+}
+
+function isActiveParam(p) {
+  if (!p.id.startsWith('gear')) return true;
+  const gc = p.id === 'gear1' ? 1 : parseInt(p.id.replace('gear',''));
+  return gc <= state.gearCount;
+}
+
+// ============ STEP 0: TUNE TYPE ============
+function initTuneTypes() {
+  const grid = $('tuneTypeGrid');
+  grid.innerHTML = TUNE_TYPES.map(t => `
+    <div class="tune-card" data-id="${t.id}">
+      <div class="icon">${t.icon}</div>
+      <div class="name">${t.name}</div>
+      <div class="desc">${t.desc}</div>
+    </div>
+  `).join('');
+  grid.querySelectorAll('.tune-card').forEach(card => {
+    card.addEventListener('click', () => {
+      grid.querySelectorAll('.tune-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      state.tuneType = card.dataset.id;
+      const t = TUNE_TYPES.find(x => x.id === state.tuneType);
+      if (t) $('tuneTypeBadge').innerHTML = `${t.icon} ${t.name}`;
+      $('btnStep0Next').disabled = false;
+    });
+  });
+}
+
+$('btnStep0Next').addEventListener('click', () => { showStep(1); renderCarList(); });
+
+// ============ STEP 1: CAR SELECTION ============
+let filteredCars = [];
+
+function getAllCars() {
+  return [...FH6_CARS, ...state.customCars];
+}
+
+function renderCarList(query) {
+  const list = $('carList');
+  const q = (query || $('carSearch').value || '').toLowerCase();
+  filteredCars = getAllCars().filter(c =>
+    c.make.toLowerCase().includes(q) ||
+    c.model.toLowerCase().includes(q) ||
+    c.type.toLowerCase().includes(q) ||
+    c.class.toLowerCase().includes(q)
+  );
+  if (filteredCars.length === 0) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted)">No cars found. Try a different search or add a custom car.</div>';
+  } else {
+    list.innerHTML = filteredCars.map(c => `
+      <div class="car-item" data-idx="${filteredCars.indexOf(c)}">
+        <span class="car-make">${c.make}</span> ${c.model}
+        <span class="car-class">${c.class}</span>
+      </div>
+    `).join('');
+    list.querySelectorAll('.car-item').forEach(el => {
+      el.addEventListener('click', () => {
+        list.querySelectorAll('.car-item').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        const idx = parseInt(el.dataset.idx);
+        state.selectedCar = filteredCars[idx];
+        showCarInfo(state.selectedCar);
+        $('btnStep1Next').disabled = false;
+      });
+    });
+  }
+  $('carCount').textContent = `${filteredCars.length} car(s) found`;
+}
+
+function showCarInfo(car) {
+  const info = $('carInfo');
+  info.classList.remove('hidden');
+  info.innerHTML = `
+    <div class="car-title">${car.make} ${car.model}</div>
+    <div class="car-details">${car.type} | Class: ${car.class} | ${car.country} | ${car.collection}${car.addon ? ' | ' + car.addon : ''}</div>
+  `;
+}
+
+$('carSearch').addEventListener('input', e => renderCarList(e.target.value));
+
+$('btnStep1Back').addEventListener('click', () => showStep(0));
+$('btnStep1Next').addEventListener('click', () => { showStep(2); initStatsFields(); });
+
+$('btnCustomCar').addEventListener('click', () => {
+  $('customCarModal').classList.remove('hidden');
+});
+$('btnCustomCancel').addEventListener('click', () => {
+  $('customCarModal').classList.add('hidden');
+  $('customMake').value = '';
+  $('customModel').value = '';
+  $('customType').value = '';
+});
+$('customCarModal').addEventListener('click', (e) => {
+  if (e.target === $('customCarModal')) {
+    $('customCarModal').classList.add('hidden');
+    $('customMake').value = '';
+    $('customModel').value = '';
+    $('customType').value = '';
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('customCarModal').classList.contains('hidden')) {
+    $('customCarModal').classList.add('hidden');
+    $('customMake').value = '';
+    $('customModel').value = '';
+    $('customType').value = '';
+  }
+});
+$('btnCustomSave').addEventListener('click', () => {
+  const make = $('customMake').value.trim();
+  const model = $('customModel').value.trim();
+  const cls = $('customClass').value;
+  const type = $('customType').value.trim() || 'Custom';
+  if (!make || !model) { notify('Please enter make and model', 'error'); return; }
+  const car = { make, model, class: cls, type, country: 'Custom', collection: 'Custom', addon: '' };
+  state.customCars.push(car);
+  $('customCarModal').classList.add('hidden');
+  $('customMake').value = '';
+  $('customModel').value = '';
+  $('customType').value = '';
+  renderCarList();
+  notify('Custom car added!', 'success');
+});
+// ============ STEP 2: CAR STATS ============
+const CAR_FIELDS = [
+  { id:'pi', name:'PI Rating', unit:'D, C, B, A, S1, S2, R, X', default:500 },
+  { id:'drivetrain', name:'Drivetrain', type:'select', options:['FWD','RWD','AWD'], default:'RWD' },
+  { id:'hp', name:'Horsepower', unit:'HP', default:400 },
+  { id:'torque', name:'Torque', unit:'lb-ft', default:350 },
+  { id:'weight', name:'Weight', unit:'lbs', default:3200 },
+  { id:'weightDist', name:'Weight Dist (F/R)', unit:'%F', default:52 },
+  { id:'engine', name:'Engine Displacement', unit:'L', default:3.0 },
+  { id:'lateralGs60', name:'Lateral Gs (60 mph)', unit:'g', default:1.0 },
+  { id:'lateralGs100', name:'Lateral Gs (100 mph)', unit:'g', default:0.9 },
+  { id:'zero60', name:'0-60 mph', unit:'s', default:4.5 },
+  { id:'zero100', name:'0-100 mph', unit:'s', default:10.5 },
+  { id:'topSpeed', name:'Top Speed', unit:'mph', default:180 },
+  { id:'mechBalance', name:'Mech. Balance', unit:'%F', default:50 },
+  { id:'aeroBalance', name:'Aero Balance', unit:'%F', default:50 },
+  { id:'aeroEfficiency', name:'Aero Efficiency', unit:'%', default:50 }
+];
+
+
+
+function initStatsFields() {
+  const stockContainer = $('stockStatsFields');
+  stockContainer.innerHTML = CAR_FIELDS.map(f => {
+    const val = state.stockStats[f.id] !== undefined ? state.stockStats[f.id] : f.default !== undefined ? f.default : '';
+    if (f.type === 'select') {
+      return `<div class="form-group"><label>${f.name}</label><select id="stat_${f.id}">${f.options.map(o => `<option value="${o}" ${o===val?'selected':''}>${o}</option>`).join('')}</select></div>`;
+    }
+    return `<div class="form-group"><label>${f.name}${f.unit?' ('+f.unit+')':''}</label><input type="number" id="stat_${f.id}" value="${val}" step="any"></div>`;
+  }).join('');
+}
+
+$('btnStep2Back').addEventListener('click', () => showStep(1));
+$('btnStep2Next').addEventListener('click', () => {
+  CAR_FIELDS.forEach(f => {
+    const el = $('stat_' + f.id);
+    if (el) state.stockStats[f.id] = el.value;
+  });
+  showStep(3);
+  initTuningSliders();
+});
+
+// ============ STEP 3: TUNING SLIDERS (DUAL-RANGE) ============
+const VARIABLE_PARAMS = new Set(['rideHeightF','rideHeightR','springsF','springsR','downforceF','downforceR']);
+
+function isFixedParam(id) { return !VARIABLE_PARAMS.has(id); }
+
+function getDefaultSliderValues() {
+  const vals = {};
+  PARAMS.forEach(p => {
+    vals[p.id] = { min: p.min, max: p.max };
+  });
+  return vals;
+}
+
+function initTuningSliders() {
+  if (Object.keys(state.sliderValues).length === 0) {
+    state.sliderValues = getDefaultSliderValues();
+  }
+  document.querySelectorAll('.gear-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.gear) === state.gearCount);
+  });
+  const container = $('tuningSliders');
+  const categories = [...new Set(PARAMS.map(p => p.category))];
+  const profile = TUNE_PROFILES[state.tuneType];
+  
+  container.innerHTML = categories.map(cat => {
+    let params = PARAMS.filter(p => p.category === cat);
+    params = params.filter(p => !p.id.startsWith('gear') || p.id === 'gear1' || parseInt(p.id.replace('gear','')) <= state.gearCount);
+    return `
+      <div>
+        <h3 style="font-size:12px;color:var(--accent);margin-bottom:4px">${cat}</h3>
+        ${params.map(p => {
+          const r = state.sliderValues[p.id] || { min: p.min, max: p.max };
+          if (isFixedParam(p.id)) {
+            return `
+              <div class="slider-group" data-param="${p.id}">
+                <div class="slider-header">
+                  <span class="param-name">${p.name}</span>
+                </div>
+                <div class="range-display">
+                  <span style="font-size:13px;color:var(--text-muted)">${r.min}${p.unit} – ${r.max}${p.unit}</span>
+                  <span style="font-size:10px;color:var(--text-muted);margin-left:6px">(fixed)</span>
+                </div>
+              </div>
+            `;
+          }
+          return `
+            <div class="slider-group" data-param="${p.id}">
+              <div class="slider-header">
+                <span class="param-name">${p.name}</span>
+              </div>
+              <div class="range-inputs">
+                <label class="range-label">Min
+                  <input type="text" class="range-inp range-min" id="sMin_${p.id}" inputmode="decimal" value="${r.min}">
+                </label>
+                <label class="range-label">Max
+                  <input type="text" class="range-inp range-max" id="sMax_${p.id}" inputmode="decimal" value="${r.max}">
+                </label>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }).join('');
+
+  // Attach events only for variable params
+  PARAMS.forEach(p => {
+    if (isFixedParam(p.id)) return;
+    const sMin = $('sMin_' + p.id);
+    const sMax = $('sMax_' + p.id);
+    if (!sMin || !sMax) return;
+    
+    function clamp(v) { return isNaN(v) ? 0 : v; }
+    function update() {
+      state.sliderValues[p.id] = { min: clamp(parseFloat(sMin.value)), max: clamp(parseFloat(sMax.value)) };
+    }
+    function updateOnBlur() {
+      let minV = parseFloat(sMin.value);
+      let maxV = parseFloat(sMax.value);
+      if (isNaN(minV)) minV = p.min;
+      if (isNaN(maxV)) maxV = p.max;
+      minV = Math.max(p.min, Math.min(p.max, minV));
+      maxV = Math.max(p.min, Math.min(p.max, maxV));
+      if (minV > maxV) { const t = minV; minV = maxV; maxV = t; }
+      sMin.value = minV;
+      sMax.value = maxV;
+      state.sliderValues[p.id] = { min: minV, max: maxV };
+    }
+    
+    sMin.addEventListener('input', update);
+    sMax.addEventListener('input', update);
+    sMin.addEventListener('change', updateOnBlur);
+    sMax.addEventListener('change', updateOnBlur);
+  });
+}
+
+function scoreParamRange(paramId, rangeMin, rangeMax, profileIdeal) {
+  const pdef = PARAMS.find(p => p.id === paramId);
+  if (!pdef || profileIdeal === undefined || profileIdeal === null) return 50;
+  const globalRange = pdef.max - pdef.min;
+  if (globalRange === 0) return 100;
+  const targetPos = Math.max(0, Math.min(1, (profileIdeal - pdef.min) / globalRange));
+  const userMid = (rangeMin + rangeMax) / 2;
+  const userPos = (userMid - pdef.min) / globalRange;
+  const diff = Math.abs(targetPos - userPos);
+  const posScore = Math.max(0, 100 - diff * 100);
+  const widthRatio = Math.min(1, (rangeMax - rangeMin) / globalRange);
+  const widthFactor = 1 - widthRatio * 0.15;
+  return Math.round(Math.max(0, posScore * widthFactor));
+}
+
+function getAdaptiveIdeal(paramId, rangeMin, rangeMax, profileIdeal) {
+  const pdef = PARAMS.find(p => p.id === paramId);
+  if (!pdef || profileIdeal === undefined || profileIdeal === null) return profileIdeal;
+  const globalRange = pdef.max - pdef.min;
+  if (globalRange === 0) return profileIdeal;
+  const targetPos = Math.max(0, Math.min(1, (profileIdeal - pdef.min) / globalRange));
+  return +(rangeMin + targetPos * (rangeMax - rangeMin)).toFixed(2);
+}
+
+$('btnStep3Back').addEventListener('click', () => showStep(2));
+$('btnStep3Next').addEventListener('click', () => { state.cumulativeBehaviorAdj = {}; showStep(4); initStep4(); showResults(); });
+
+$('gearBtns').addEventListener('click', (e) => {
+  const btn = e.target.closest('.gear-btn');
+  if (!btn) return;
+  state.gearCount = parseInt(btn.dataset.gear);
+  initTuningSliders();
+});
+
+$('btnResetSliders').addEventListener('click', () => {
+  state.sliderValues = getDefaultSliderValues();
+  initTuningSliders();
+  notify('Sliders reset to default values', 'success');
+});
+
+// ============ STEP 4: RESULTS ============
+function showResults(behaviorAdjustments) {
+  const profile = TUNE_PROFILES[state.tuneType];
+  if (!profile) return;
+
+  const adjustedVals = adjustProfileForCar(profile, state.stockStats, state.tuneType);
+
+  // Merge behavior adjustments into a position offset per param
+  const behavAdj = behaviorAdjustments || {};
+
+  let totalScore = 0, totalWeight = 0;
+  const scores = {};
+  const catScores = {};
+
+  PARAMS.filter(isActiveParam).forEach(p => {
+    const baseIdeal = adjustedVals[p.id] ?? profile.vals[p.id];
+    const learnedIdeal = getLearnedIdeal(state.tuneType, p.id, baseIdeal);
+    const globalRange = p.max - p.min;
+    const posOffset = behavAdj[p.id] || 0;
+    const shiftedIdeal = globalRange > 0
+      ? Math.max(p.min, Math.min(p.max, learnedIdeal + posOffset * globalRange))
+      : learnedIdeal;
+    const ideal = shiftedIdeal;
+    const range = state.sliderValues[p.id];
+    const rMin = range?.min ?? p.min;
+    const rMax = range?.max ?? p.max;
+    const score = scoreParamRange(p.id, rMin, rMax, ideal);
+    const adaptiveIdeal = getAdaptiveIdeal(p.id, rMin, rMax, ideal);
+    const w = profile.weights[p.id] || 5;
+    scores[p.id] = { score, weight: w, ideal: adaptiveIdeal, param: p };
+    totalScore += score * w;
+    totalWeight += w;
+    if (!catScores[p.category]) catScores[p.category] = { score: 0, weight: 0 };
+    catScores[p.category].score += score * w;
+    catScores[p.category].weight += w;
+  });
+
+  const overall = totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0;
+  $('scoreNumber').textContent = overall;
+  const detail = $('scoreDetail');
+  const grade = overall >= 90 ? 'S' : overall >= 80 ? 'A' : overall >= 70 ? 'B' : overall >= 60 ? 'C' : overall >= 50 ? 'D' : 'F';
+  detail.textContent = `Grade: ${grade} | Tune: ${profile.label}`;
+
+  // Category scores
+  const grid = $('resultsGrid');
+  grid.innerHTML = Object.entries(catScores).map(([cat, s]) => {
+    const catScore = s.weight > 0 ? Math.round(s.score / s.weight) : 0;
+    const cls = catScore >= 80 ? 'high' : catScore >= 50 ? 'mid' : 'low';
+    return `
+      <div class="result-card">
+        <h3>${cat}</h3>
+        <div class="value ${cls}">${catScore}<span style="font-size:14px">/100</span></div>
+      </div>
+    `;
+  }).join('');
+
+  // Full parameter table
+  const table = $('resultsTable');
+  const rowOrder = { centerBalance:2 };
+  const sortedParams = PARAMS.filter(isActiveParam).sort((a, b) => {
+    const ka = rowOrder[a.id] || 0;
+    const kb = rowOrder[b.id] || 0;
+    return ka - kb;
+  });
+  table.innerHTML = `
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="background:var(--card);border-bottom:1px solid var(--border)">
+        <th style="padding:8px 12px;text-align:left">Parameter</th>
+        <th style="padding:8px 12px;text-align:center">Min-Max Values</th>
+        <th style="padding:8px 12px;text-align:center">Recommended</th>
+        <th style="padding:8px 12px;text-align:center">Score</th>
+      </tr></thead>
+      <tbody>
+        ${sortedParams.map(p => {
+          const s = scores[p.id];
+          if (!s) return '';
+          const cls = s.score >= 80 ? 'high' : s.score >= 50 ? 'mid' : 'low';
+          const rng = state.sliderValues[p.id];
+          const rangeStr = rng ? `${rng.min}${p.unit} — ${rng.max}${p.unit}` : `${s.ideal}${p.unit}`;
+          const adjusted = behavAdj && behavAdj[p.id] !== undefined;
+          return `<tr style="border-bottom:1px solid var(--border)${adjusted ? ';background:rgba(0,212,255,0.06)' : ''}">
+            <td style="padding:6px 12px">${p.name}${adjusted ? ' <span style="font-size:10px;color:var(--accent)">↻</span>' : ''}</td>
+            <td style="padding:6px 12px;text-align:center;font-size:12px">${rangeStr}</td>
+            <td style="padding:6px 12px;text-align:center;color:var(--accent)">${s.ideal}${p.unit}</td>
+            <td style="padding:6px 12px;text-align:center;color:var(--${cls === 'high' ? 'success' : cls === 'mid' ? 'warning' : 'danger'})">${s.score}/100</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>
+  `;
+
+  // Show learning status
+  const learning = getLearningData();
+  const lEntry = learning[state.tuneType];
+  if (lEntry && lEntry.count > 0) {
+    const adjustedCount = Object.values(lEntry.adjustments || {}).filter(a => a.count > 0).length;
+    $('learningIndicator').textContent = `Learning: ${lEntry.count} ratings recorded, ${adjustedCount} parameters adapted for ${profile.label}.`;
+  } else {
+    $('learningIndicator').textContent = 'No feedback yet — rate your tune to help the system learn.';
+  }
+
+  // Show behavior feedback indicator
+  const bIndicator = document.getElementById('behaviorIndicator');
+  if (behaviorAdjustments && Object.keys(behaviorAdjustments).length > 0) {
+    const names = Object.keys(behaviorAdjustments).join(', ');
+    if (!bIndicator) {
+      const el = document.createElement('div');
+      el.id = 'behaviorIndicator';
+      el.style.cssText = 'font-size:11px;color:var(--accent);margin-top:4px';
+      el.textContent = `Behavior feedback applied: ${Object.keys(behaviorAdjustments).length} parameters adjusted.`;
+      $('learningIndicator').after(el);
+    }
+  } else if (bIndicator) {
+    bIndicator.remove();
+  }
+}
+
+// Init behavior buttons when step 4 loads
+function initStep4() {
+  const existing = document.getElementById('behaviorIndicator');
+  if (existing) existing.remove();
+  initBehaviorBtns();
+  document.querySelectorAll('.behavior-btn').forEach(b => b.classList.remove('selected'));
+}
+
+// Behavior button toggle
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.behavior-btn');
+  if (btn) btn.classList.toggle('selected');
+});
+
+$('btnAnalyzeFeedback').addEventListener('click', () => {
+  const selected = getSelectedBehaviors();
+  if (selected.length === 0) {
+    notify('Select at least one behavior issue', 'warning');
+    return;
+  }
+  const existing = document.getElementById('behaviorIndicator');
+  if (existing) existing.remove();
+  const adj = computeBehaviorAdjustments(selected);
+  Object.entries(adj).forEach(([param, delta]) => {
+    state.cumulativeBehaviorAdj[param] = (state.cumulativeBehaviorAdj[param] || 0) + delta;
+  });
+  showResults(state.cumulativeBehaviorAdj);
+  notify(`Recommendations adjusted for ${selected.length} behavior issue(s)`, 'success');
+});
+
+$('btnResetLearning').addEventListener('click', (e) => {
+  e.preventDefault();
+  if (confirm('Reset all learning data for all tune types? This cannot be undone.')) {
+    saveLearningData({});
+    $('learningIndicator').textContent = 'Learning data cleared.';
+    $('ratingFeedback').textContent = '';
+    notify('Learning data reset', 'success');
+  }
+});
+
+$('btnExportLearning').addEventListener('click', () => {
+  const data = getLearningData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fh6_learning_backup.json';
+  a.click();
+  notify('Learning data exported', 'success');
+});
+
+$('btnImportLearning').addEventListener('click', () => {
+  $('importLearningInput').click();
+});
+
+$('importLearningInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      saveLearningData(data);
+      notify('Learning data imported successfully. Refresh to apply.', 'success');
+      const ind = $('learningIndicator');
+      if (ind) ind.textContent = 'Learning data imported. Changes will apply on next analysis.';
+    } catch (err) {
+      notify('Invalid learning data file', 'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ============ LEARNING SYSTEM ============
+const LEARNING_KEY = 'fh6_learning';
+const LEARNING_PULL_MAX = 0.08;
+const LEARNING_PULL_DENOM = 1250;
+const LEARNING_SCORE_GAP = 15;
+let learningDataCache = null;
+
+function getLearningData() {
+  if (!learningDataCache) learningDataCache = JSON.parse(localStorage.getItem(LEARNING_KEY) || '{}');
+  return learningDataCache;
+}
+
+function saveLearningData(data) {
+  learningDataCache = data;
+  if (window.electronAPI) {
+    window.electronAPI.saveLearning(JSON.stringify(data)).then(ok => {
+      if (!ok) console.error('Failed to save learning data to disk');
+    });
+  }
+  localStorage.setItem(LEARNING_KEY, JSON.stringify(data));
+}
+
+function getLearnedIdeal(tuneType, paramId, baseIdeal) {
+  const learning = getLearningData();
+  const entry = learning[tuneType];
+  if (!entry || !entry.adjustments || !entry.adjustments[paramId]) return baseIdeal;
+  const adj = entry.adjustments[paramId];
+  if (!adj.count) return baseIdeal;
+  const avgDelta = adj.sum / adj.count;
+  const pdef = PARAMS.find(p => p.id === paramId);
+  if (!pdef) return baseIdeal;
+  const globalRange = pdef.max - pdef.min;
+  const adjusted = baseIdeal + avgDelta * globalRange;
+  return Math.max(pdef.min, Math.min(pdef.max, Math.round(adjusted * 100) / 100));
+}
+
+function recordFeedback(tuneType, rating, appScore) {
+  const learning = getLearningData();
+  if (!learning[tuneType]) learning[tuneType] = { count: 0, adjustments: {} };
+  const entry = learning[tuneType];
+  entry.count = (entry.count || 0) + 1;
+  if (!entry.adjustments) entry.adjustments = {};
+
+  const diff = rating - appScore;
+  const absDiff = Math.abs(diff);
+
+  // Learn when user experience differs from app score by > LEARNING_SCORE_GAP points
+  if (absDiff > LEARNING_SCORE_GAP) {
+    const profile = TUNE_PROFILES[tuneType];
+    if (profile) {
+      PARAMS.forEach(p => {
+        if (!(p.id in profile.vals)) return;
+        const range = state.sliderValues[p.id];
+        if (!range) return;
+        const rMid = (range.min + range.max) / 2;
+        const ideal = profile.vals[p.id];
+        const globalRange = p.max - p.min;
+        if (globalRange === 0) return;
+        const userPos = (rMid - p.min) / globalRange;
+        const idealPos = (ideal - p.min) / globalRange;
+
+        const pullStrength = Math.min(LEARNING_PULL_MAX, absDiff / LEARNING_PULL_DENOM);
+        const direction = diff > 0 ? 1 : 0.4;
+        const delta = (userPos - idealPos) * pullStrength * direction;
+
+        if (!entry.adjustments[p.id]) entry.adjustments[p.id] = { sum: 0, count: 0 };
+        entry.adjustments[p.id].sum += delta;
+        entry.adjustments[p.id].count++;
+      });
+    }
+  }
+
+  saveLearningData(learning);
+  return learning[tuneType].count;
+}
+
+// ============ BEHAVIOR FEEDBACK ============
+const BEHAVIORS = [
+  { id:'noGrip', label:'No Grip', desc:'Car lacks traction and slides wide during cornering or acceleration', adj:{ downforceF:0.15, downforceR:0.15, tirePressureF:-0.08, tirePressureR:-0.08, camberF:-0.05, camberR:-0.05, arbF:-0.05, arbR:-0.05 } },
+  { id:'badLaunch', label:'Bad Launch', desc:'Car bogs or spins excessively when starting from a standstill', adj:{ finalDrive:0.1, diffAccelR:0.1, centerBalance:0.05, tirePressureR:-0.05, springsR:0.05 } },
+  { id:'understeers', label:'Car Understeers', desc:'Front end pushes wide and car does not want to turn into corners', adj:{ arbR:0.1, arbF:-0.08, camberF:-0.05, camberR:0.03, toeF:-0.03 } },
+  { id:'oversteers', label:'Car Oversteers', desc:'Rear end steps out or wants to spin during corner entry or mid-turn', adj:{ arbF:0.1, arbR:-0.08, camberR:-0.05, toeR:0.03 } },
+  { id:'hardTopSpeed', label:'Hard to Handle at Top Speeds', desc:'Car feels unstable, twitchy, or floats at high speed', adj:{ downforceF:0.1, downforceR:0.1, springsF:0.08, springsR:0.08, caster:0.05, tirePressureF:0.03, tirePressureR:0.03 } },
+  { id:'hardDrift', label:'Hard to Drift', desc:'Car struggles to initiate or sustain a controlled slide', adj:{ tirePressureR:0.08, arbF:-0.08, arbR:0.12, diffAccelR:0.1, camberF:-0.05, toeR:-0.03 } },
+  { id:'badBraking', label:'Bad Braking Distance', desc:'Car takes too long to stop, brakes feel weak or ineffective', adj:{ brakeBalance:-0.05, brakePressure:0.08 } },
+  { id:'locksTires', label:'Car Locks the Tires', desc:'Wheels lock up and skid when braking, losing steering control', adj:{ brakePressure:-0.15, brakeBalance:0.02 } },
+  { id:'badAccel', label:'Bad Acceleration', desc:'Car feels sluggish or slow to gain speed when applying throttle', adj:{ finalDrive:0.08, diffAccelR:0.08, centerBalance:0.05, tirePressureR:-0.05 } },
+  { id:'badCornering', label:'Bad at Cornering', desc:'Car lacks grip and confidence through turns, feels unstable in corners', adj:{ camberF:-0.05, camberR:-0.05, arbF:-0.05, arbR:-0.05, toeF:-0.02, toeR:0.02, downforceF:0.08, downforceR:0.08 } },
+  { id:'tooMuchGrip', label:'Too Much Grip', desc:'Car is too planted, reluctant to rotate or slide when desired', adj:{ downforceF:-0.1, downforceR:-0.1, tirePressureF:0.05, tirePressureR:0.05, camberF:0.03, camberR:0.03, arbF:0.05, arbR:0.05 } },
+  { id:'noControl', label:'No Car Control', desc:'Car feels unpredictable, twitchy, or difficult to keep on line', adj:{ arbF:-0.08, arbR:-0.08, camberF:0.03, camberR:0.03, diffAccelR:-0.08, centerBalance:-0.05, springsF:-0.05, springsR:-0.05 } },
+  { id:'spinsTires', label:'Car Spins the Tires a Lot', desc:'Excessive wheelspin on acceleration, tires break loose too easily', adj:{ diffAccelR:0.12, centerBalance:0.08, tirePressureR:-0.05, springsR:-0.05, arbR:-0.05, camberR:-0.03 } },
+  { id:'tooLow', label:'Car Is Too Low', desc:'Underside scrapes or bottoms out over bumps and curbs', adj:{ rideHeightF:0.15, rideHeightR:0.15 } },
+  { id:'tooHi', label:'Car Is Too High', desc:'Ride height is excessive, causing body roll and reduced stability', adj:{ rideHeightF:-0.15, rideHeightR:-0.15 } },
+  { id:'topSpeedLow', label:'Top Speed Too Low', desc:'Car hits a low speed ceiling, lacks top-end power or gearing', adj:{ downforceF:-0.1, downforceR:-0.1, finalDrive:-0.1, tirePressureF:0.05, tirePressureR:0.05, rideHeightF:-0.05, rideHeightR:-0.05 } },
+  { id:'runsOutOfGear', label:'Runs Out of Gear', desc:'Car hits the rev limiter before reaching top speed, gearing too short', adj:{ finalDrive:-0.15 } },
+  { id:'notFastEnough', label:'Not Fast Enough', desc:'Overall pace is disappointing, car lacks speed on straights', adj:{ downforceF:-0.12, downforceR:-0.12, finalDrive:-0.08, tirePressureF:0.05, tirePressureR:0.05, rideHeightF:-0.05, rideHeightR:-0.05 } },
+  { id:'needMoreAccel', label:'Need More Acceleration', desc:'Car feels slow out of corners, needs more punch from low RPM', adj:{ finalDrive:0.1, diffAccelR:0.1, diffAccelF:0.05, centerBalance:0.05, tirePressureR:-0.05 } },
+  { id:'carBounces', label:'Car Bounces / Too Stiff', desc:'Suspension skips and hops over bumps, losing tire contact with the road', adj:{ springsF:-0.08, springsR:-0.08, reboundF:-0.08, reboundR:-0.08, bumpF:-0.08, bumpR:-0.08 } },
+  { id:'divesBraking', label:'Car Dives Under Braking', desc:'Nose drops excessively when braking, upsetting balance and stability', adj:{ springsF:0.1, reboundF:0.1, bumpF:0.05 } },
+  { id:'wontTurnIn', label:'Won\'t Turn In', desc:'Steering feels dead or delayed at initial wheel input entering a corner', adj:{ toeF:-0.05, caster:0.08, camberF:-0.03 } },
+  { id:'feelsDarty', label:'Car Feels Darty', desc:'Too twitchy on-center, nervous at high speed, requires constant correction', adj:{ toeF:0.05, caster:-0.05, camberF:0.03 } },
+  { id:'wontRotate', label:'Car Won\'t Rotate', desc:'Car pushes wide mid-corner and refuses to rotate or adjust its line', adj:{ diffDecelR:-0.1, brakeBalance:-0.03, diffAccelR:0.08 } },
+  { id:'slowsCoasting', label:'Slows Down Coasting', desc:'Car decelerates too much when lifting throttle, feels like dragging a brake', adj:{ diffDecelF:-0.1, diffDecelR:-0.1 } }
+];
+
+function initBehaviorBtns() {
+  const container = $('behaviorBtns');
+  if (!container) return;
+  container.innerHTML = BEHAVIORS.map(b =>
+    `<button class="btn btn-sm behavior-btn" data-behavior="${b.id}" title="${b.desc}">${b.label}</button>`
+  ).join('');
+}
+
+function getSelectedBehaviors() {
+  return [...document.querySelectorAll('.behavior-btn.selected')].map(b => b.dataset.behavior);
+}
+
+function computeBehaviorAdjustments(selectedIds) {
+  const adj = {};
+  selectedIds.forEach(id => {
+    const b = BEHAVIORS.find(x => x.id === id);
+    if (b) {
+      Object.entries(b.adj).forEach(([param, delta]) => {
+        adj[param] = (adj[param] || 0) + delta;
+      });
+    }
+  });
+  return adj;
+}
+
+$('btnStep4Back').addEventListener('click', () => showStep(3));
+$('btnSubmitRating').addEventListener('click', () => {
+  const rating = parseInt($('userRating').value);
+  if (isNaN(rating) || rating < 0 || rating > 100) {
+    $('ratingFeedback').textContent = 'Enter a number between 0 and 100';
+    return;
+  }
+  const profile = TUNE_PROFILES[state.tuneType];
+  if (!profile) return;
+
+  const appScore = parseInt($('scoreNumber').textContent);
+  const count = recordFeedback(state.tuneType, rating, appScore);
+
+  const diff = rating - appScore;
+  let msg = `Rating saved! (${count} feedback entries for ${profile.label})`;
+  if (Math.abs(diff) > 15) {
+    msg += ` Gap of ${diff > 0 ? '+' : ''}${diff}pts — profile ideals adjusted based on your driving.`;
+  }
+  $('ratingFeedback').textContent = msg;
+  $('userRating').value = '';
+
+  // Refresh learning indicator
+  const learning = getLearningData();
+  const lEntry = learning[state.tuneType];
+  if (lEntry && lEntry.count > 0) {
+    const adjustedCount = Object.values(lEntry.adjustments || {}).filter(a => a.count > 0).length;
+    $('learningIndicator').textContent = `Learning: ${lEntry.count} ratings recorded, ${adjustedCount} parameters adapted for ${profile.label}.`;
+  }
+});
+
+$('btnNewTune').addEventListener('click', () => {
+  state.tuneType = null;
+  state.selectedCar = null;
+  state.stockStats = {};
+  state.sliderValues = {};
+  state.gearCount = 6;
+  showStep(0);
+  $('btnStep0Next').disabled = true;
+  $('carInfo').classList.add('hidden');
+  $('btnStep1Next').disabled = true;
+});
+
+$('btnExportTune').addEventListener('click', () => {
+  const car = state.selectedCar;
+  const profile = TUNE_PROFILES[state.tuneType];
+  const label = car ? `${car.make}_${car.model}`.replace(/[^a-zA-Z0-9._-]/g, '_') : 'export';
+  
+  // JSON export for import
+  const jsonData = {
+    version: 1,
+    exported: new Date().toISOString(),
+    tuneType: state.tuneType,
+    tuneLabel: profile.label,
+    car: car ? { make: car.make, model: car.model, class: car.class } : null,
+    gearCount: state.gearCount,
+    carStats: state.stockStats,
+    sliderValues: state.sliderValues
+  };
+  const jBlob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+  const ja = document.createElement('a');
+  ja.href = URL.createObjectURL(jBlob);
+  ja.download = label + '_tune.json';
+  ja.click();
+
+  // Text export for readability
+  let text = `=== Forza Horizon 6 Tuning App - Tune Export ===\n`;
+  text += `Date: ${new Date().toLocaleDateString()}\n`;
+  text += `Tune Type: ${profile.label}\n`;
+  if (car) text += `Car: ${car.make} ${car.model} (${car.class})\n`;
+  text += `\n--- Car Stats ---\n`;
+  CAR_FIELDS.forEach(f => {
+    if (state.stockStats[f.id] !== undefined) text += `${f.name}: ${state.stockStats[f.id]}\n`;
+  });
+
+  const adjustedVals = adjustProfileForCar(profile, state.stockStats, state.tuneType);
+
+  text += `\n--- Tuning Parameters (Range Selected) ---\n`;
+  PARAMS.filter(isActiveParam).forEach(p => {
+    const r = state.sliderValues[p.id];
+    const baseIdeal = adjustedVals[p.id] ?? profile.vals[p.id];
+    const ideal = getLearnedIdeal(state.tuneType, p.id, baseIdeal);
+    const rMin = r?.min ?? p.min;
+    const rMax = r?.max ?? p.max;
+    const score = scoreParamRange(p.id, rMin, rMax, ideal);
+    const adaptive = getAdaptiveIdeal(p.id, rMin, rMax, ideal);
+    if (r) {
+      text += `${p.name}: Range [${r.min}${p.unit} - ${r.max}${p.unit}] → Recommended: ${adaptive}${p.unit} (Score: ${score}/100)\n`;
+    }
+  });
+  text += `\nTransmission: ${state.gearCount === 1 ? 'Electric (1-speed)' : state.gearCount + '-Speed'}\n`;
+  let totalScore = 0, totalWeight = 0;
+  PARAMS.filter(isActiveParam).forEach(p => {
+    const r = state.sliderValues[p.id];
+    if (r) {
+      const baseIdeal = adjustedVals[p.id] ?? profile.vals[p.id];
+      const ideal = getLearnedIdeal(state.tuneType, p.id, baseIdeal);
+      const s = scoreParamRange(p.id, r.min, r.max, ideal);
+      const w = profile.weights[p.id] || 5;
+      totalScore += s * w;
+      totalWeight += w;
+    }
+  });
+  const overall = totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0;
+  text += `\nOverall Score: ${overall}/100\n`;
+
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = label + '_tune.txt';
+  a.click();
+  notify('Tune exported! (JSON + TXT)', 'success');
+});
+
+// ============ IMPORT ============
+$('btnImportTune').addEventListener('click', () => $('importFileInput').click());
+$('importFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!data.tuneType || !TUNE_PROFILES[data.tuneType]) { notify('Invalid tune file', 'error'); return; }
+      state.tuneType = data.tuneType;
+      state.gearCount = data.gearCount || 6;
+      state.stockStats = data.carStats || {};
+      state.sliderValues = data.sliderValues || {};
+      if (data.car) {
+        state.selectedCar = data.car;
+        const info = $('carInfo');
+        info.classList.remove('hidden');
+        info.innerHTML = `<strong style="color:var(--accent)">${data.car.make} ${data.car.model}</strong> <span class="badge">${data.car.class}</span>`;
+        $('btnStep1Next').disabled = false;
+      }
+      initTuneTypes();
+      showStep(3);
+      initTuningSliders();
+      notify('Tune imported: ' + (data.tuneLabel || data.tuneType), 'success');
+      $('importFileInput').value = '';
+    } catch (err) { notify('Failed to import tune file', 'error'); }
+  };
+  reader.readAsText(file);
+});
+
+// ============ INIT ============
+(async () => {
+  if (window.electronAPI) {
+    try {
+      const raw = await window.electronAPI.loadLearning();
+      if (raw) { learningDataCache = JSON.parse(raw); }
+    } catch (e) { console.warn('Electron load failed:', e.message); }
+  }
+  if (!learningDataCache) learningDataCache = JSON.parse(localStorage.getItem(LEARNING_KEY) || '{}');
+  const storageEl = document.getElementById('storageLocation');
+  if (storageEl) storageEl.textContent = window.electronAPI ? 'data/learning.json on disk' : 'your browser\'s localStorage';
+  initTuneTypes();
+})();
+</script>
+</body>
+</html>
