@@ -73,7 +73,7 @@ Issues and pull requests are welcome! 🎉 For changes to tune recommendations, 
 
 📜 License
 
-MIT © Heriberto Perez AKA Grueso
+MIT Copyright (c) 2026 Heriberto Perez
 
 🙏 Credits
 🎮 Forza Horizon 6 is developed by Playground Games and published by Xbox Game Studios.
