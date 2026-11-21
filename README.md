@@ -74,12 +74,6 @@ An intelligent tune builder and analysis tool for Forza Horizon 6. Pick a tune t
 
 ---
 
-## 📜 License
-
-&#91;Choose a license, e.g. MIT\] © \[Your Name\]
-
----
-
 ## 🙏 Credits
 
 - 🎮 *Forza Horizon 6* is developed by Playground Games and published by Xbox Game Studios.
